@@ -1,8 +1,6 @@
-import torch
 import argparse
 import pickle
 import pprint
-from torch.autograd import Variable
 from dataset import Dataset, Config
 from model import Char_NLM
 from run import run_epoch

@@ -4,7 +4,6 @@ import torch.autograd as autograd
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
-import sys
 from device import DEVICE
 
 
@@ -33,10 +32,10 @@ class Char_NLM(nn.Module):
         self.model_params(debug=False)
     
     def init_hidden(self, batch_size):
-        return (autograd.Variable(torch.zeros(
-                    self.config.layer_num, batch_size, self.config.hidden_dim)).to(DEVICE),
-                autograd.Variable(torch.zeros(
-                    self.config.layer_num, batch_size, self.config.hidden_dim)).to(DEVICE))
+        return (torch.zeros(
+                    self.config.layer_num, batch_size, self.config.hidden_dim).to(DEVICE),
+                torch.zeros(
+                    self.config.layer_num, batch_size, self.config.hidden_dim).to(DEVICE))
 
     def init_weights(self):
         # self.char_embed.weight.data.uniform_(-0.05, 0.05)

@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import numpy as np
-from torch.autograd import Variable
 from device import DEVICE
 
 def run_epoch(m, d, mode='tr', is_train=True):
@@ -14,8 +12,8 @@ def run_epoch(m, d, mode='tr', is_train=True):
         m.optimizer.zero_grad()
         inputs, targets = d.get_next_batch(m.config.seq_len, mode=mode)
         inputs, targets = (
-                Variable(torch.LongTensor(inputs).to(DEVICE)),
-                Variable(torch.LongTensor(targets).to(DEVICE)))
+                torch.LongTensor(inputs).to(DEVICE),
+                torch.LongTensor(targets).to(DEVICE))
         
         if is_train:
             m.train()
