@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from torch.autograd import Variable
-
+from device import DEVICE
 
 def run_epoch(m, d, mode='tr', is_train=True):
     running_loss = total_loss = 0.0
@@ -14,8 +14,8 @@ def run_epoch(m, d, mode='tr', is_train=True):
         m.optimizer.zero_grad()
         inputs, targets = d.get_next_batch(m.config.seq_len, mode=mode)
         inputs, targets = (
-                Variable(torch.LongTensor(inputs).cuda()),
-                Variable(torch.LongTensor(targets).cuda()))
+                Variable(torch.LongTensor(inputs).to(DEVICE)),
+                Variable(torch.LongTensor(targets).to(DEVICE)))
         
         if is_train:
             m.train()
@@ -24,15 +24,15 @@ def run_epoch(m, d, mode='tr', is_train=True):
 
         m.hidden = [state.detach() for state in m.hidden]
         outputs, m.hidden = m(inputs, m.hidden)
-        loss = m.criterion(outputs, targets.view(-1))
+        loss = m.criterion(outputs, targets.contiguous().view(-1))
         if is_train:
             loss.backward()
-            nn.utils.clip_grad_norm(m.parameters(), m.config.rnn_max_norm)
+            nn.utils.clip_grad_norm_(m.parameters(), m.config.rnn_max_norm)
             m.optimizer.step()
 
-        running_loss += np.exp(loss.data[0])
+        running_loss += np.exp(loss.data.item())
         run_step += 1.0
-        total_loss += np.exp(loss.data[0])
+        total_loss += np.exp(loss.data.item())
         total_step += 1.0
 
         if (d.get_batch_ptr(mode)) % (m.config.batch_size * print_step) == 0:

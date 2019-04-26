@@ -6,7 +6,7 @@ from torch.autograd import Variable
 from dataset import Dataset, Config
 from model import Char_NLM
 from run import run_epoch
-
+from device import DEVICE
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('--data_path', type=str, default='./data/preprocess(tmp).pkl')
@@ -72,7 +72,7 @@ def main():
     print('test', dataset.test_data[0].shape)
     print()
 
-    model = Char_NLM(args).cuda()
+    model = Char_NLM(args).to(DEVICE)
     run_experiment(model, dataset)
 
 

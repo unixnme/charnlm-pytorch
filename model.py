@@ -5,6 +5,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
 import sys
+from device import DEVICE
 
 
 class Char_NLM(nn.Module):
@@ -33,9 +34,9 @@ class Char_NLM(nn.Module):
     
     def init_hidden(self, batch_size):
         return (autograd.Variable(torch.zeros(
-                    self.config.layer_num, batch_size, self.config.hidden_dim)).cuda(),
+                    self.config.layer_num, batch_size, self.config.hidden_dim)).to(DEVICE),
                 autograd.Variable(torch.zeros(
-                    self.config.layer_num, batch_size, self.config.hidden_dim)).cuda())
+                    self.config.layer_num, batch_size, self.config.hidden_dim)).to(DEVICE))
 
     def init_weights(self):
         # self.char_embed.weight.data.uniform_(-0.05, 0.05)
@@ -69,7 +70,7 @@ class Char_NLM(nn.Module):
         return params
 
     def char_conv_layer(self, inputs):
-        embeds = self.char_embed(inputs.view(-1, self.config.max_wordlen))
+        embeds = self.char_embed(inputs.contiguous().view(-1, self.config.max_wordlen))
         embeds = torch.transpose(torch.unsqueeze(embeds, 2), 1, 3).contiguous()
         conv_result = []
         for i, conv in enumerate(self.char_conv):
@@ -86,7 +87,7 @@ class Char_NLM(nn.Module):
 
     def highway_layer(self, inputs):
         nonl = F.relu(self.hw_nonl(inputs))
-        gate = F.sigmoid(self.hw_gate(inputs))
+        gate = torch.sigmoid(self.hw_gate(inputs))
         z = torch.mul(gate, nonl) + torch.mul(1-gate, inputs)
         return z
 
@@ -118,7 +119,7 @@ class Char_NLM(nn.Module):
 
     # deprecated but can be useful
     def create_mask(self, lengths, max_length):
-        r = torch.unsqueeze(torch.arange(0, max_length), 0).long().cuda() # (1, 82)
+        r = torch.unsqueeze(torch.arange(0, max_length), 0).long().to(DEVICE) # (1, 82)
         l = torch.unsqueeze(lengths, 1).expand(lengths.size(0), max_length) # (20, 82)
         mask = torch.lt(r.expand_as(l), l)
         return mask

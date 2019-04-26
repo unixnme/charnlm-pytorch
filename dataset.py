@@ -33,6 +33,8 @@ class Dataset(object):
         self.pad_data(self.valid_data)
         self.pad_data(self.test_data)
 
+        # data = [batch_size, batches, maxlen], [batch_size, batches]
+        # where data[0] is char idx and data[1] is the corresponding word idx
         self.train_data = self.reshape_data(self.train_data)
         self.valid_data = self.reshape_data(self.valid_data)
         self.test_data = self.reshape_data(self.test_data)
@@ -170,6 +172,7 @@ class Dataset(object):
         print('reshaped data', inputs.shape)
         return inputs, targets
 
+    # inputs, targets such that inputs[1:] = target[0:-1], i.e., predict the next
     def get_next_batch(self, seq_len, mode='tr'):
         if mode == 'tr':
             ptr = self.train_ptr
