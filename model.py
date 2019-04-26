@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.autograd as autograd
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
@@ -13,9 +12,9 @@ class Char_NLM(nn.Module):
         self.config = config
         self.char_embed = nn.Embedding(config.char_vocab_size, config.char_embed_dim,
                 padding_idx=1)
-        self.char_conv = nn.ModuleList([nn.Conv2d(
+        self.char_conv = nn.ModuleList([nn.Conv1d(
                 config.char_embed_dim, config.char_conv_fn[i],
-                (config.char_conv_fh[i], config.char_conv_fw[i]),
+                config.char_conv_fw[i],
                 stride=1) for i in range(len(config.char_conv_fn))])
         self.input_dim = int(np.sum(config.char_conv_fn)) 
         self.lstm = nn.LSTM(self.input_dim, config.hidden_dim, config.layer_num,
@@ -70,10 +69,10 @@ class Char_NLM(nn.Module):
 
     def char_conv_layer(self, inputs):
         embeds = self.char_embed(inputs.contiguous().view(-1, self.config.max_wordlen))
-        embeds = torch.transpose(torch.unsqueeze(embeds, 2), 1, 3).contiguous()
+        embeds = torch.transpose(embeds, 1, 2).contiguous()
         conv_result = []
         for i, conv in enumerate(self.char_conv):
-            char_conv = torch.squeeze(conv(embeds))
+            char_conv = conv(embeds)
             char_mp = torch.max(torch.tanh(char_conv), 2)[0]
             char_mp = char_mp.view(-1, inputs.size(1), char_mp.size(1))
             conv_result.append(char_mp)
